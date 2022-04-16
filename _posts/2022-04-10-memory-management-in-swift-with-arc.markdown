@@ -5,15 +5,15 @@ date:   2022-04-10 12:58:13 +0300
 categories: swift
 ---
 ## Memory management in general
-There are two approaches to memory management:
+There are two main approaches to memory management:
 * Manual memory management. This type of memory management is frequently used in systems where performance matters and additional overhead for automatic memory management at runtime is not allowed. In this case a programmer is responsible for manual allocating and freeing memory.
-* Automatic memory management. Manual memory management is error prone because in a complex codebase it is very easy to forget to free allocated memory or accidentally use already freed memory. For this reason some programming languages have built in mechanisms for automatic memory management. The most popular one is the garbage collector. Garbage collector is just a chunk of code integrated with your binary and frees memory at some time during execution (the details of that when the garbage collector frees memory can depend on implementation details). In this case a programmer just works on a program logic and does not distract on memory management because the garbage collector does it implicitly. But most implementations of garbage collectors frees memory at a time when memory pressure happens and it leads to additional overhead during a program execution.
+* Automatic memory management. Manual memory management is error prone because in complex codebases it is very easy to forget to free allocated memory or accidentally use already freed memory. For this reason some programming languages have built in mechanisms for automatic memory management. The most popular one is the garbage collector. Garbage collector is just a chunk of code integrated with your binary which frees memory at some time during execution (the details of when the garbage collector frees memory can depend on implementation details). In this case a programmer just deals with program logic and does not distract on memory management because the garbage collector does it implicitly. But most implementations of garbage collectors frees memory at a time when memory pressure happens and it leads to additional overhead during a program execution.
 
 ## Automatic Reference Counter
 *Automatic Reference Counter* or just *ARC* is Apple’s approach to deal with memory management. Before ARC was introduced in Objective-C programmers were using a method called *manual retain-release* or *MRR* to explicitly manage memory of applications by specifying when an object must be retained and when it must be released. The method is based on reference counting but the problem is that a programmer must specify a proper calling of retain/release methods which was working in a pair. ARC is the compiler feature which is responsible for injecting retain/release methods in a code implicitly instead of a programmer. But now programmers have another responsibility - build proper relationships between objects to avoid retain cycles when objects retain each other which leads to memory leaks. So let’s see ARC in action with a few common examples of retain cycles and how to help ARC break those retain cycles with Swift language features.
 
 ## ARC in action
-Suppose we have the next class:
+Suppose we have next class:
 
 {% highlight swift %}
 class Employee {
@@ -27,7 +27,7 @@ class Employee {
 }
 {% endhighlight %}
 
-In the `Employee` class we declared the `deinit` method to make sure that the instance of that class is released.
+In the `Employee` class we declared the `deinit` method with `print()` function inside to see that the instance of that class is released.
 Now we create few instances of the `Employee` class and check the output of execution:
 
 {% highlight swift %}
@@ -49,7 +49,7 @@ Here we create three instances of the `Employee?` class, then assign the `t1` va
 
 ### An example with a situation where two properties, both of which are allowed to be `nil`, have a strong reference cycle
 
-Let’s take a look at an example where two properties, both of which are allowed to be `nil`, have a strong reference cycle
+Let’s take a look at an example where two properties, both of which are allowed to be `nil`, have a strong reference cycle.
 Suppose we have two classes with properties which refers to an instance of each other:
 
 {% highlight swift %}
@@ -77,7 +77,6 @@ class F1Car {
 {% endhighlight %}
 
 When we create instances of those classes we can indicate that the retain cycle is occurred because `deinit` is not called for any of those instances:
-
 {% highlight swift %}
 let pilot = Pilot(name: "Alonso")
 let f1Car = F1Car(model: "R2022")
@@ -86,7 +85,7 @@ pilot.f1Car = f1Car
 f1Car.pilot = pilot
 {% endhighlight %}
 
-To figure out what is happened let’s draw the diagram:
+To figure out what is happened let’s draw a diagram:
 
 ![Retain cycle](/assets/retain-cycle.png)
 
@@ -125,8 +124,91 @@ f1Car.pilot = pilot
 #=> prints 'deinit: R2022'
 {% endhighlight %}
 
-#### Resolve the retain cycle with redesigning the system by adding an additional type to avoid using of `weak`
-Yet another way to break the retain cycle is redesigning the system by adding an additional type. Let’s see a code example:
+### An example with a situation where one property that’s allowed to be `nil` and another property that can’t be `nil` have the potential to cause a strong reference cycle
+Let’s look at a situation where one property that’s allowed to be `nil` and another property that can’t be `nil` have the potential to cause a strong reference cycle. In this scenario we can break the potential retain cycle by specifying a property which refers to an object whose lifetime is the same or greater as `unowned`.
+Here is code:
+{% highlight swift %}
+class Pilot {
+    let name: String
+    var f1Car: F1Car?
+    init(name: String) {
+        self.name = name
+    }
+    deinit {
+        print("\(#function): \(name)")
+    }
+}
+    
+class F1Car {
+    let model: String
+    unowned var pilot: Pilot
+    init(model: String, pilot: Pilot) {
+        self.model = model
+        self.pilot = pilot
+    }
+    deinit {
+        print("\(#function): \(model)")
+    }
+}
+
+let pilot = Pilot(name: "Alonso")
+let f1Car = F1Car(model: "R2022", pilot: pilot)
+pilot.f1Car = f1Car
+#=> prints 'deinit: Alonso'
+#=> prints 'deinit: R2022'
+{% endhighlight %}
+
+### An example in which both properties should always have a value, and neither property should ever be `nil` once initialization is complete
+Yet another situation where both properties should always have a value and neither of it should ever be `nil` once initialization is complete. In this scenario, it’s useful to combine an `unowned` property on one class with an implicitly unwrapped optional property on another class. Let’s take a look at an example:
+{% highlight swift %}
+class Pilot {
+    let name: String
+    var f1Car: F1Car!
+    init(name: String, f1CarModel: String) {
+        self.name = name
+        self.f1Car = F1Car(model: f1CarModel, pilot: self)
+    }
+    deinit {
+        print("\(#function): \(name)")
+    }
+    func info() {
+        print("\(name) drives \(f1Car.model)")
+    }
+}
+    
+class F1Car {
+    let model: String
+    unowned var pilot: Pilot
+    init(model: String, pilot: Pilot) {
+        self.model = model
+        self.pilot = pilot
+    }
+    deinit {
+        print("\(#function): \(model)")
+    }
+    func info() {
+        print("\(model) is driven by \(pilot.name)")
+    }
+}
+{% endhighlight %}
+
+In the example above the `F1Car` has the `unowned` reference to the `Pilot` instance and it’s OK because the `Pilot` instance has a lifetime equal or greater than the `F1Car` instance. At the same time the `Pilot` class has forced unwrapped reference to the `F1Car` instance but as the `F1Car` instance is initialized during the `Pilot` initialization we are confident that the `F1Car` instance can’t be` nil`.
+The client's code:
+{% highlight swift %}
+let pilot = Pilot(name: "Alonso", f1CarModel: "R2022")
+pilot.info()
+pilot.f1Car.info()
+#=> prints 'Alonso drives R2022'
+#=> prints 'R2022 is driven by Alonso'
+#=> prints 'deinit: Alonso'
+#=> prints 'deinit: R2022'
+{% endhighlight %}
+
+### Redesigning a system to resolve retain cycles
+Also we can resolve retain cycles by redesigning relationships between objects by adding new types which helps to avoid usage of `weak` or `unowned` specifiers in main types of a system. It gives us more flexibility but also we need to write more code. Let's see a few examples.
+
+#### Resolve the retain cycle with redesigning the system by adding an additional type to avoid using of `weak` or `unowned`
+First way to break the retain cycle is redesigning the system by adding an additional type and avoiding usage of `weak` or `unowned` specifiers completely. Let’s see an example:
 {% highlight swift %}
 class Pilot {
     let name: String
@@ -187,8 +269,7 @@ print(pilot.info())
 {% endhighlight %}
 
 #### Resolve the retain cycle by using Weak Reference pattern
-And one more approach to break the retain cycle is Weak Reference pattern which is quite similar to the previous approach because it also relates to redesigning a system.
-So, let’s take a look at the code below:
+And one more approach to break the retain cycle is Weak Reference pattern which is quite similar to the previous approach except that in this case we use a generic type which can be extended to satisfy relationships between objects. So, let’s take a look at an example:
 {% highlight swift %}
 protocol F1CarProtocol {
     var model: String { get }
@@ -264,87 +345,8 @@ Here the relationship between objects:
 
 ![Break retain cycle with Weak Reference pattern](/assets/retain-cycle-weak-reference-pattern.png)
 
-The main goal of the Weak Reference pattern is hiding from entities a knowledge about their relationships (who must hold weak reference and who must hold strong reference etc). Also the pattern corresponds to the *open-closed principle* because we do not need to change relationships between objects by specifying weak or unowned references. All we need to do is to extend the system with instances of `WeakReference` type.
-
-### An example with a situation where one property that’s allowed to be `nil` and another property that can’t be `nil` have the potential to cause a strong reference cycle
-Let’s look at a situation where one property that’s allowed to be `nil` and another property that can’t be `nil` have the potential to cause a strong reference cycle. In this scenario we can break the potential retain cycle by specifying a property which refers to an object whose lifetime is the same or greater as `unowned`.
-Here is the code:
-{% highlight swift %}
-class Pilot {
-    let name: String
-    var f1Car: F1Car?
-    init(name: String) {
-        self.name = name
-    }
-    deinit {
-        print("\(#function): \(name)")
-    }
-}
-    
-class F1Car {
-    let model: String
-    unowned var pilot: Pilot
-    init(model: String, pilot: Pilot) {
-        self.model = model
-        self.pilot = pilot
-    }
-    deinit {
-        print("\(#function): \(model)")
-    }
-}
-
-let pilot = Pilot(name: "Alonso")
-let f1Car = F1Car(model: "R2022", pilot: pilot)
-pilot.f1Car = f1Car
-#=> prints 'deinit: Alonso'
-#=> prints 'deinit: R2022'
-{% endhighlight %}
-
-### An example in which both properties should always have a value, and neither property should ever be `nil` once initialization is complete
-Yet another situation where both properties should always have a value and neither of it should ever be `nil` once initialization is complete. In this scenario, it’s useful to combine an `unowned` property on one class with an implicitly unwrapped optional property on the other class. Let’s take a look at an example:
-{% highlight swift %}
-class Pilot {
-    let name: String
-    var f1Car: F1Car!
-    init(name: String, f1CarModel: String) {
-        self.name = name
-        self.f1Car = F1Car(model: f1CarModel, pilot: self)
-    }
-    deinit {
-        print("\(#function): \(name)")
-    }
-    func info() {
-        print("\(name) drives \(f1Car.model)")
-    }
-}
-    
-class F1Car {
-    let model: String
-    unowned var pilot: Pilot
-    init(model: String, pilot: Pilot) {
-        self.model = model
-        self.pilot = pilot
-    }
-    deinit {
-        print("\(#function): \(model)")
-    }
-    func info() {
-        print("\(model) is driven by \(pilot.name)")
-    }
-}
-{% endhighlight %}
-
-In the example above the `F1Car` has the `unowned` reference to the `Pilot` instance and it’s OK because the `Pilot` instance has a lifetime equal or greater than the `F1Car` instance. At the same time the `Pilot` class has forced unwrapped reference to the `F1Car` instance but as the `F1Car` instance is initialized during the `Pilot` initialization we are confident that the `F1Car` instance can’t be` nil`.
-The client's code:
-{% highlight swift %}
-let pilot = Pilot(name: "Alonso", f1CarModel: "R2022")
-pilot.info()
-pilot.f1Car.info()
-#=> prints 'Alonso drives R2022'
-#=> prints 'R2022 is driven by Alonso'
-#=> prints 'deinit: Alonso'
-#=> prints 'deinit: R2022'
-{% endhighlight %}
+#### Conclusion about systems redesign
+The main goal of redesigning a system is hiding from entities a knowledge about their relationships (who must hold a weak reference and who must hold a strong reference etc). Also it corresponds to the *open-closed principle* because we do not need to change relationships between objects by specifying `weak` or `unowned` references. All we need to do is to extend the system with instances of `WeakReference` type or another.
 
 ### Retain cycles for closures
 And one more frequent way to accidentally make a retain cycle is strong references between a class instance and a closure. For example:
