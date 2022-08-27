@@ -395,4 +395,4 @@ Also need to mention that since Xcode 13 a new experimental compiler optimizatio
 
 [Manual Memeory Management in the Swift Standard Library](https://developer.apple.com/documentation/swift/swift_standard_library/manual_memory_management)
 
-[Memeory management in the documentation archive](https://developer.apple.com/documentation/swift/swift_standard_library/manual_memory_management)
+[Memeory management in the documentation archive](https://developer.apple.com/library/archive/releasenotes/ObjectiveC/RN-TransitioningToARC/Introduction/Introduction.html)
