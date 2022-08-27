@@ -381,8 +381,6 @@ This way we can break the retain cycle.
 Also need to mention that since Xcode 13 a new experimental compiler optimization `Optimize Object Lifetimes` is available. As Apple says: 
 >With this build setting turned on, you may see objects being deallocated immediately after last use much more consistently, bringing observed object lifetimes closer to their guaranteed minimum.
 
-(Here “observed object lifetimes” means `weak` and `unowned` specifiers)
-
 ## Resources:
 
 [Link to the code samples](https://github.com/VMironiuk/arc-blog-post-sample)
