@@ -391,6 +391,6 @@ Also need to mention that since Xcode 13 a new experimental compiler optimizatio
 
 [Another way to deal with manual memory management with `withExtendedLifetime(_:_:)` function](https://developer.apple.com/documentation/swift/1541033-withextendedlifetime)
 
-[Manual Memeory Management in the Swift Standard Library](https://developer.apple.com/documentation/swift/swift_standard_library/manual_memory_management)
+[Manual Memory Management in the Swift Standard Library](https://developer.apple.com/documentation/swift/swift_standard_library/manual_memory_management)
 
-[Memeory management in the documentation archive](https://developer.apple.com/library/archive/releasenotes/ObjectiveC/RN-TransitioningToARC/Introduction/Introduction.html)
+[Memory management in the documentation archive](https://developer.apple.com/library/archive/releasenotes/ObjectiveC/RN-TransitioningToARC/Introduction/Introduction.html)
