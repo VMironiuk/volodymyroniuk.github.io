@@ -87,7 +87,7 @@ f1Car.pilot = pilot
 
 To figure out what happened let’s draw a diagram:
 
-![Retain cycle](/assets/retain-cycle.png)
+![Retain cycle](/assets/2022-04-10-memory-management-in-swift-with-arc/retain-cycle.png)
 
 As you can see on the diagram the instances hold a strong reference to each other which leads to a memory leak because the reference counter is not zero for both instances and ARC does not mark the instances as ready to release to free memory in the future.
 There are a few possible options to break the retain cycle. Let’s see them in action.
@@ -110,7 +110,7 @@ class F1Car {
 
 Now our diagram looks a little bit different:
 
-![Break retain cycle with weak](/assets/retain-cycle-weak.png)
+![Break retain cycle with weak](/assets/2022-04-10-memory-management-in-swift-with-arc/retain-cycle-weak.png)
 
 When we run the client’s code again we can see that both `deinit` methods are called:
 
@@ -248,7 +248,7 @@ class F1Car {
 
 The relationship between the objects looks like this:
 
-![Break retain cycle after redesign](/assets/retain-cycle-redesign.png)
+![Break retain cycle after redesign](/assets/2022-04-10-memory-management-in-swift-with-arc/retain-cycle-redesign.png)
 
 As you can see in this system the main entity is the `F1Car` which holds a strong reference to the `Pilot`. The `Pilot` also needs to know some information about the `F1Car` and for that, we extract this information to the additional type `F1CarInfo` which is shared between the `Pilot` and the `F1Car`. This scheme also allows us to break the possible retain cycle between the `Pilot` and `F1Car`.
 And here is the client's code:
@@ -343,7 +343,7 @@ pilot.info()
 
 Here is the relationship between objects:
 
-![Break retain cycle with Weak Reference pattern](/assets/retain-cycle-weak-reference-pattern.png)
+![Break retain cycle with Weak Reference pattern](/assets/2022-04-10-memory-management-in-swift-with-arc/retain-cycle-weak-reference-pattern.png)
 
 #### Conclusion about a system redesign
 The main goal of redesigning a system is hiding from entities knowledge about their relationships (who must hold a weak reference and who must hold a strong reference etc). Also, it corresponds to the *open-closed principle* because we do not need to change relationships between objects by specifying `weak` or `unowned` references. All we need to do is to extend the system with instances of the `WeakReference` type or another.
