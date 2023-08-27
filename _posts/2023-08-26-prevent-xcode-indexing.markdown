@@ -14,7 +14,7 @@ Let's proceed with exploring effective methods to alleviate these challenges and
 
 ## Sample
 
-To shed light on this issue, I've prepared [a sample project](https://github.com/VMironiuk/prevent-xcode-indexing-blog-post-sample-with-issue) that demonstrates this problem. Upon delving into the project, you'll immediately notice the conspicuous "Indexing Text" title, positioned prominently atop Xcode's interface, as visually depicted below:
+To shed light on this issue, I've prepared [a sample project](https://github.com/VMironiuk/prevent-xcode-indexing-blog-post-sample-with-issue) that demonstrates this problem. Upon delving into the project, you'll immediately notice the conspicuous `Indexing | ...` title, positioned prominently atop Xcode's interface, as visually depicted below:
 ![Xcode indexing](/assets/2023-08-26-prevent-xcode-indexing/xcode-indexing.png)
 
 If you want to experience this issue for yourself, you can do a little experiment. By making copies of the files in a folder called `dictionaries`, you can make the indexing process even slower. I found something interesting when doing this experiment on my MacBook Pro from 2018 with an Intel processor. When the size of the `dictionaries` folder grew beyond 1 GB, my computer started to slow down a lot. This clearly shows how these additional files impact your computer's performance.
