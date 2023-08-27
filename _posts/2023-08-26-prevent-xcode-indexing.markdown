@@ -14,7 +14,7 @@ Let's proceed with exploring effective methods to alleviate these challenges and
 
 ## Sample
 
-To shed light on this issue, I've prepared [a sample project](https://github.com/VMironiuk/xcode-indexing-samples/tree/main/issue/XcodeIndexingSample) that demonstrates this problem. Upon delving into the project, you'll immediately notice the conspicuous "Indexing Text" title, positioned prominently atop Xcode's interface, as visually depicted below:
+To shed light on this issue, I've prepared [a sample project](https://github.com/VMironiuk/prevent-xcode-indexing-blog-post-sample-with-issue) that demonstrates this problem. Upon delving into the project, you'll immediately notice the conspicuous "Indexing Text" title, positioned prominently atop Xcode's interface, as visually depicted below:
 ![Xcode indexing](/assets/2023-08-26-prevent-xcode-indexing/xcode-indexing.png)
 
 If you want to experience this issue for yourself, you can do a little experiment. By making copies of the files in a folder called `dictionaries`, you can make the indexing process even slower. I found something interesting when doing this experiment on my MacBook Pro from 2018 with an Intel processor. When the size of the `dictionaries` folder grew beyond 1 GB, my computer started to slow down a lot. This clearly shows how these additional files impact your computer's performance.
@@ -105,7 +105,7 @@ fi
 echo "SUCCESS" > "${DERIVED_FILE_DIR}/unzip-dictionaries-output.txt"
 {% endhighlight %}
 
-With this, you're well-prepared to manage the intricacies of runtime files and optimize your Xcode experience. Feel free to dive into the completed project and experiment with the workaround yourself. You can find the full project, along with its solution, right [here](https://github.com/VMironiuk/xcode-indexing-samples/tree/main/fixed/XcodeIndexingSample).
+With this, you're well-prepared to manage the intricacies of runtime files and optimize your Xcode experience. Feel free to dive into the completed project and experiment with the workaround yourself. You can find the full project, along with its solution, right [here](https://github.com/VMironiuk/prevent-xcode-indexing-blog-post-sample-with-workaround).
 
 The screenshot below shows up the completed version of the custom script:
 ![Custom script completed](/assets/2023-08-26-prevent-xcode-indexing/custom-script-completed.png)
@@ -115,5 +115,3 @@ The screenshot below shows up the completed version of the custom script:
 [Running custom scripts during a build](https://developer.apple.com/documentation/xcode/running-custom-scripts-during-a-build?language=objc)
 
 [Declare inputs and outputs for custom scripts and build rules](https://developer.apple.com/documentation/Xcode/improving-the-speed-of-incremental-builds#Declare-inputs-and-outputs-for-custom-scripts-and-build-rules)
-
-[The sample project repository](https://github.com/VMironiuk/xcode-indexing-samples)
